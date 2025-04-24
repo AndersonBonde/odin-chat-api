@@ -1,11 +1,15 @@
 const prisma = require('./index');
+const bcrypt = require('bcryptjs');
 
 async function main() {
+  const hashedPassword1 = await bcrypt.hash('password123', 10);
+  const hashedPassword2 = await bcrypt.hash('password123', 10);
+
   // Create users
   const user1 = await prisma.user.create({
     data: {
       email: 'user1@example.com',
-      password: 'password123',
+      password: hashedPassword1,
       role: 'user',
     },
   });
@@ -13,7 +17,7 @@ async function main() {
   const user2 = await prisma.user.create({
     data: {
       email: 'user2@example.com',
-      password: 'password123',
+      password: hashedPassword2,
       role: 'user',
     },
   });
