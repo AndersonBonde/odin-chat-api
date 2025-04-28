@@ -6,13 +6,16 @@ const allGeneralMessagesGet = async (req, res) => {
     where: { name: 'General Chat' },
   });
 
-  const generalMessages = await prisma.message.findMany({
+  const messages = await prisma.message.findMany({
     where: {
       chatRoomId: generalChat.id,
     },
+    include: {
+      author: true,
+    }
   });
 
-  return res.json({ message: 'List of all general messages fetched successfully', generalMessages });
+  return res.json({ message: 'List of all general messages fetched successfully', messages });
 };
 
 const createMessagePost = [
