@@ -27,6 +27,7 @@ async function main() {
     data: {
       name: 'General Chat',
       isPrivate: false,
+      slug: 'general',
       members: {
         connect: [
           { id: user1.id },

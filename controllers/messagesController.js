@@ -33,15 +33,15 @@ const createMessageOnGeneralPost = [
     } else {
       try {
         if (userId && guestName){
-          throw new Error('Message cannot have both authorId and guestName');
+          return res.status(400).json({ message: `Message cannot have both authorId and guestName` });
         }
 
         if (!userId && !guestName) {
-          throw new Error('Message must have either authorId or guestName');
+          return res.status(400).json({ message: `Message must have either authorId or guestName` });
         }
         
-        const chatRoom = await prisma.chatRoom.findFirst({
-          where: { name: 'General Chat' },
+        const chatRoom = await prisma.chatRoom.findUnique({
+          where: { slug: 'general' },
         });
         
         if (!chatRoom) {

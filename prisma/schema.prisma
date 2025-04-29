@@ -23,6 +23,7 @@ model ChatRoom {
   id        Int       @id @default(autoincrement())
   name      String?   @db.VarChar(255)
   isPrivate Boolean
+  slug      String?   @unique
   members   User[]
   messages  Message[]
 }
