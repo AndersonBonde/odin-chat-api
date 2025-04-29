@@ -19,18 +19,17 @@ const allGeneralMessagesGet = async (req, res) => {
   return res.json({ message: 'List of all general messages fetched successfully', messages });
 };
 
-const createMessagePost = [
+const createMessageOnGeneralPost = [
   body('text')
     .trim()
     .isLength({ min: 1, max: 1024 }).withMessage(`Message must be between 1 and 1024 characters`)
     .escape(),
   async (req, res) => {
     const { id: userId, text, guestName } = req.body;
-    const { id: chatRoomId } = req.params;
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      return res.status(400).json({ message: `Error creating a new message for chatRoom with id: ${chatRoomId}`, errors: errors.array() });
+      return res.status(400).json({ message: `Error creating a new message for General Chat`, errors: errors.array() });
     } else {
       try {
         if (userId && guestName){
@@ -41,27 +40,13 @@ const createMessagePost = [
           throw new Error('Message must have either authorId or guestName');
         }
         
-        const chatRoom = await prisma.chatRoom.findUnique({
-          where: { id: parseInt(chatRoomId) },
-          include: { members: true },
+        const chatRoom = await prisma.chatRoom.findFirst({
+          where: { name: 'General Chat' },
         });
         
         if (!chatRoom) {
-          return res.status(404).json({ message: `chatRoom with id ${chatRoomId} not found` });
+          return res.status(404).json({ message: `General Chat not found` });
         }
-
-        // User must be a member of the chatRoom before commenting
-        if (userId) {
-          const allowed = chatRoom.members.some((user) => user.id == userId);
-
-          if (!allowed) {
-            return res.status(403).json({ message: `Can't comment on chatRooms that you don't participate` });
-          }
-        }
-
-        // Guests can only comment in General Chat
-        if (guestName && chatRoom.name !== 'General Chat')
-          return res.status(403).json({ message: ' Guests can only comment on General Chat' });
 
         const newMessage = await prisma.message.create({
           data: {
@@ -72,7 +57,7 @@ const createMessagePost = [
           }
         });
   
-        return res.status(201).json({ message: `New message for chatRoom with id: ${chatRoomId} created`, newMessage });
+        return res.status(201).json({ message: `New message for General Chat created successfully`, newMessage });
 
       } catch (err) {
         console.error('Failed to create message with prisma');
@@ -127,6 +112,6 @@ const updateMessagePatch = [
 
 module.exports = {
   allGeneralMessagesGet,
-  createMessagePost,
+  createMessageOnGeneralPost,
   updateMessagePatch,
 }
