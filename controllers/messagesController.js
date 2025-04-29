@@ -81,7 +81,12 @@ const createMessagePost = [
   }
 ]
 
+const updateMessagePost = [
+
+];
+
 module.exports = {
   allGeneralMessagesGet,
   createMessagePost,
+  updateMessagePost,
 }

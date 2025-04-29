@@ -3,7 +3,8 @@ const messagesController = require('../controllers/messagesController');
 
 const router = new Router();
 
-router.get('/', messagesController.allGeneralMessagesGet);
-router.post('/:id', messagesController.createMessagePost);
+router.get('/chat-rooms/general', messagesController.allGeneralMessagesGet);
+router.post('/chat-rooms/:id', messagesController.createMessagePost);
+router.patch('/:id', messagesController.updateMessagePost);
 
 module.exports = router;
