@@ -4,16 +4,13 @@ const { body, validationResult } = require('express-validator');
 
 const allGeneralMessagesGet = async (req, res) => {
   const generalChat = await prisma.chatRoom.findFirst({
-    where: { name: 'General Chat' },
+    where: { slug: 'general' },
   });
 
   const messages = await prisma.message.findMany({
-    where: {
-      chatRoomId: generalChat.id,
-    },
-    include: {
-      author: true,
-    }
+    where: { chatRoomId: generalChat.id, },
+    include: { author: true, },
+    orderBy: { id: 'asc' },
   });
 
   return res.json({ message: 'List of all general messages fetched successfully', messages });
