@@ -3,7 +3,7 @@ const passport = require('passport');
 const { body, validationResult } = require('express-validator');
 
 const allGeneralMessagesGet = async (req, res) => {
-  const generalChat = await prisma.chatRoom.findFirst({
+  const generalChat = await prisma.chatRoom.findUnique({
     where: { slug: 'general' },
   });
 
@@ -107,8 +107,37 @@ const updateMessagePatch = [
   }
 ];
 
+const deleteMessage = [
+  passport.authenticate('jwt', { session: false }),
+  async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const oldMessage = await prisma.message.findUnique({ 
+        where: { id: parseInt(id, 10) },
+      });
+
+      if (!oldMessage) {
+        return res.status(404).json({ message: `Message with id: ${id} not found` });
+      }
+      
+      if (oldMessage.authorId != req.user.id) {
+        return res.status(403).json({ message: `You are not authorized to delete this message`});
+      }
+
+      // TODO implement correct deletion
+
+      res.status(200).json({ message: `Successfully deleted message with id: ${id} WIP`});
+    } catch (err) {
+      console.error('Prisma failed to delete message with id: ${id}');
+      return res.status(500).json({ message: `Server error deleting message with id: ${id}`, error: err.message });
+    }
+  }
+];
+
 module.exports = {
   allGeneralMessagesGet,
   createMessageOnGeneralPost,
   updateMessagePatch,
+  deleteMessage,
 }

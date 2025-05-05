@@ -6,5 +6,6 @@ const router = new Router();
 router.get('/chat-rooms/general', messagesController.allGeneralMessagesGet);
 router.post('/chat-rooms/general', messagesController.createMessageOnGeneralPost);
 router.patch('/:id', messagesController.updateMessagePatch);
+router.delete('/:id', messagesController.deleteMessage);
 
 module.exports = router;
