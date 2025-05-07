@@ -3,17 +3,22 @@ const passport = require('passport');
 const { body, validationResult } = require('express-validator');
 
 const allGeneralMessagesGet = async (req, res) => {
-  const generalChat = await prisma.chatRoom.findUnique({
-    where: { slug: 'general' },
-  });
-
-  const messages = await prisma.message.findMany({
-    where: { chatRoomId: generalChat.id, },
-    include: { author: true, },
-    orderBy: { id: 'asc' },
-  });
-
-  return res.json({ message: 'List of all general messages fetched successfully', messages });
+  try {
+    const generalChat = await prisma.chatRoom.findUnique({
+      where: { slug: 'general' },
+    });
+  
+    const messages = await prisma.message.findMany({
+      where: { chatRoomId: generalChat.id, },
+      include: { author: true, },
+      orderBy: { id: 'asc' },
+    });
+  
+    return res.json({ message: 'List of all general messages fetched successfully', messages });
+  } catch (err) {
+    console.error('Failed to load general messages with prisma');
+    return res.status(500).json({ message: 'Server error loading general messages', error: err.message });
+  }
 };
 
 const createMessageOnGeneralPost = [
