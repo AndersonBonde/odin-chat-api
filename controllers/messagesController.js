@@ -130,9 +130,11 @@ const deleteMessage = [
         return res.status(403).json({ message: `You are not authorized to delete this message`});
       }
 
-      // TODO implement correct deletion
+      await prisma.message.delete({
+        where: { id: parseInt(id, 10) },
+      });
 
-      res.status(200).json({ message: `Successfully deleted message with id: ${id} WIP`});
+      res.status(200).json({ message: `Successfully deleted message with id: ${id}`});
     } catch (err) {
       console.error('Prisma failed to delete message with id: ${id}');
       return res.status(500).json({ message: `Server error deleting message with id: ${id}`, error: err.message });

@@ -3,8 +3,9 @@ const usersController = require('../controllers/usersController');
 
 const router = new Router();
 
-router.post('/register', usersController.registerUserPost);
-router.post('/login', usersController.loginUserPost);
-router.get('/logout', usersController.logoutUserGet);
+router.post('/register', usersController.postRegisterUser);
+router.post('/login', usersController.postLoginUser);
+router.get('/logout', usersController.getLogoutUser);
+router.get('/following/:id', usersController.getFollowingList);
 
 module.exports = router;

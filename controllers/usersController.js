@@ -1,10 +1,10 @@
 const bcrypt = require('bcryptjs');
 const prisma = require('../prisma/index');
 const passport = require('passport');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const { issueJWT } = require('../utils');
 
-const registerUserPost = [
+const postRegisterUser = [
   body('email')
     .trim()
     .normalizeEmail()
@@ -29,12 +29,12 @@ const registerUserPost = [
     }).withMessage(`Your password and password confirm value didn't match`),
   async (req, res, next) => {
     const errors = validationResult(req);
-    const { email, password } = req.body;
-
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: 'Error registering new user', errors: errors.array(), info: { email } });
     } 
 
+    const { email, password } = req.body;
+    
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -55,7 +55,7 @@ const registerUserPost = [
   }
 ];
 
-const loginUserPost = [
+const postLoginUser = [
   body('email')
     .trim()
     .normalizeEmail()
@@ -66,12 +66,12 @@ const loginUserPost = [
     .notEmpty().withMessage('Password is required'),
   async (req, res, next) => {
     const errors = validationResult(req);
-    const { email, password } = req.body;
-
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: 'There were validation errors', errors: errors.array(), info: { email } });
     }
 
+    const { email, password } = req.body;
+    
     try {
       const user = await prisma.user.findUnique({
         where: { email }
@@ -91,12 +91,53 @@ const loginUserPost = [
   }
 ];
 
-const logoutUserGet = (req, res) => {
+const getLogoutUser = (req, res) => {
   return res.status(200).json({ message: 'Logout successful' });
 }
 
+const getFollowingList = [
+  passport.authenticate('jwt', { session: false }),
+  param('id').isInt(),
+  async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { id } = req.params;
+
+    if (id != req.user.id) {
+      return res.status(403).json({ message: `Failed to fetch following list`});
+    }
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(id, 10) },
+        include: { 
+          following: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      return json.status(200).json(user.following);
+
+    } catch (err) {
+      next(err);
+    }
+  }
+];
+
 module.exports = {
-  registerUserPost,
-  loginUserPost,
-  logoutUserGet,
+  postRegisterUser,
+  postLoginUser,
+  getLogoutUser,
+  getFollowingList,
 }
