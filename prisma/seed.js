@@ -11,6 +11,12 @@ async function main() {
       email: 'user1@example.com',
       password: hashedPassword1,
       role: 'user',
+      profile: {
+        create: {
+          name: 'user1@example.com',
+          displayColor: '#000000',
+        }
+      }
     },
   });
 
@@ -19,6 +25,12 @@ async function main() {
       email: 'user2@example.com',
       password: hashedPassword2,
       role: 'user',
+      profile: {
+        create: {
+          name: 'user2@example.com',
+          displayColor: '#000000',
+        }
+      }
     },
   });
 

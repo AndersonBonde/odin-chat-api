@@ -29,24 +29,30 @@ const postRegisterUser = [
     }).withMessage(`Your password and password confirm value didn't match`),
   async (req, res, next) => {
     const errors = validationResult(req);
+    const { email, password } = req.body;
+
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: 'Error registering new user', errors: errors.array(), info: { email } });
     } 
-
-    const { email, password } = req.body;
     
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const user = await prisma.user.create({
         data: {
-          email: req.body.email,
+          email: email,
           password: hashedPassword,
-        }
+          profile: {
+            create: {
+              name: email,
+              displayColor: '#000000',
+            },
+          },
+        },
       });
       
       const jwt = issueJWT(user);
-      const { id, email } = user; 
+      const { id } = user;
 
       return res.status(201).json({ message: 'User created successfully', user: { id, email }, token: jwt.token, expiresIn: jwt.expires });
     } catch (err) {
@@ -127,7 +133,7 @@ const getFollowingList = [
         return res.status(404).json({ message: 'User not found' });
       }
 
-      return json.status(200).json(user.following);
+      return res.status(200).json(user.following);
 
     } catch (err) {
       next(err);

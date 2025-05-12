@@ -17,6 +17,7 @@ model User {
   followers User[]     @relation("UserFollows")
   messages  Message[]
   chatRooms ChatRoom[]
+  profile   Profile?
 }
 
 model ChatRoom {
@@ -37,4 +38,12 @@ model Message {
   guestName  String?  @db.VarChar(32)
   chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
   chatRoomId Int      @default(1)
+}
+
+model Profile {
+  id           Int     @id @default(autoincrement())
+  name         String? @db.VarChar(254)
+  displayColor String?
+  user         User    @relation(fields: [userId], references: [id])
+  userId       Int     @unique
 }
