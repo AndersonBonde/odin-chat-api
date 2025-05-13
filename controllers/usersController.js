@@ -52,9 +52,9 @@ const postRegisterUser = [
       });
       
       const jwt = issueJWT(user);
-      const { id } = user;
+      const { id, profile } = user;
 
-      return res.status(201).json({ message: 'User created successfully', user: { id, email }, token: jwt.token, expiresIn: jwt.expires });
+      return res.status(201).json({ message: 'User created successfully', user: { id, email, profile }, token: jwt.token, expiresIn: jwt.expires });
     } catch (err) {
       next(err);
     }
@@ -72,15 +72,18 @@ const postLoginUser = [
     .notEmpty().withMessage('Password is required'),
   async (req, res, next) => {
     const errors = validationResult(req);
+    const { email, password } = req.body;
+
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: 'There were validation errors', errors: errors.array(), info: { email } });
     }
-
-    const { email, password } = req.body;
     
     try {
       const user = await prisma.user.findUnique({
-        where: { email }
+        where: { email },
+        include: {
+          profile: true,
+        },
       });
   
       if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -88,9 +91,9 @@ const postLoginUser = [
       }
   
       const jwt = issueJWT(user);
-      const { id } = user;
+      const { id, profile } = user;
   
-      return res.status(200).json({ message: 'User login was successful', user: { id, email }, token: jwt.token, expiresIn: jwt.expires });
+      return res.status(200).json({ message: 'User login was successful', user: { id, email, profile }, token: jwt.token, expiresIn: jwt.expires });
     } catch (err) { 
       next(err) 
     }
