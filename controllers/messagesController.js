@@ -2,7 +2,7 @@ const prisma = require('../prisma/index');
 const passport = require('passport');
 const { body, validationResult } = require('express-validator');
 
-const allGeneralMessagesGet = async (req, res) => {
+const getAllGeneralMessages = async (req, res) => {
   try {
     const generalChat = await prisma.chatRoom.findUnique({
       where: { slug: 'general' },
@@ -10,7 +10,18 @@ const allGeneralMessagesGet = async (req, res) => {
   
     const messages = await prisma.message.findMany({
       where: { chatRoomId: generalChat.id, },
-      include: { author: true, },
+      include: { 
+        author: {
+          include: {
+            profile: {
+              select: {
+                name: true,
+                displayColor: true,
+              },
+            },
+          },
+        },
+      },
       orderBy: { id: 'asc' },
     });
   
@@ -21,7 +32,7 @@ const allGeneralMessagesGet = async (req, res) => {
   }
 };
 
-const createMessageOnGeneralPost = [
+const postMessageOnGeneral = [
   body('text')
     .trim()
     .isLength({ min: 1, max: 1024 }).withMessage(`Message must be between 1 and 1024 characters`)
@@ -69,7 +80,7 @@ const createMessageOnGeneralPost = [
   }
 ]
 
-const updateMessagePatch = [
+const patchMessage = [
   passport.authenticate('jwt', { session: false }),
   body('text')
     .trim()
@@ -143,8 +154,8 @@ const deleteMessage = [
 ];
 
 module.exports = {
-  allGeneralMessagesGet,
-  createMessageOnGeneralPost,
-  updateMessagePatch,
+  getAllGeneralMessages,
+  postMessageOnGeneral,
+  patchMessage,
   deleteMessage,
 }

@@ -82,7 +82,12 @@ const postLoginUser = [
       const user = await prisma.user.findUnique({
         where: { email },
         include: {
-          profile: true,
+          profile: {
+            select: {
+              name: true,
+              displayColor: true,
+            },
+          },
         },
       });
   
@@ -144,9 +149,52 @@ const getFollowingList = [
   }
 ];
 
+const patchUserProfile = [
+  passport.authenticate('jwt', { session: false }),
+  param('id').isInt(),
+  async (req, res, next) => {
+    const { id } = req.params;
+    const { profileName, displayColor } = req.body;
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const oldProfile = await prisma.profile.findUnique({
+        where: { id: parseInt(id, 10) },
+      });
+
+      if (!oldProfile) {
+        return res.status(404).json({ message: `Profile with id: ${id} not found` });
+      }
+
+      if (oldProfile.userId != req.user.id) {
+        return res.status(403).json({ message: `Not authorized to edit this profile`});
+      }
+
+      await prisma.profile.update({
+        where: { id: parseInt(id, 10) },
+        data: {
+          name: profileName,
+          displayColor,
+        },
+      });
+
+      return res.status(200).json({ message: `Profile with id: ${id} was successfully patched` });
+
+    } catch (err) {
+      console.error('Prisma failed to patch profile');
+      next(err);
+    }
+  }
+];
+
 module.exports = {
   postRegisterUser,
   postLoginUser,
   getLogoutUser,
   getFollowingList,
+  patchUserProfile,
 }
