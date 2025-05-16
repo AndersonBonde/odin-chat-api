@@ -8,5 +8,6 @@ router.post('/login', usersController.postLoginUser);
 router.get('/logout', usersController.getLogoutUser);
 router.get('/following/:id', usersController.getFollowingList);
 router.patch('/profile/:id', usersController.patchUserProfile);
+router.get('/me', usersController.getMyInfo);
 
 module.exports = router;

@@ -88,6 +88,11 @@ const postLoginUser = [
               displayColor: true,
             },
           },
+          following: {
+            select: { 
+              id: true, 
+            },
+          },
         },
       });
   
@@ -96,9 +101,9 @@ const postLoginUser = [
       }
   
       const jwt = issueJWT(user);
-      const { id, profile } = user;
+      const { id, profile, following } = user;
   
-      return res.status(200).json({ message: 'User login was successful', user: { id, email, profile }, token: jwt.token, expiresIn: jwt.expires });
+      return res.status(200).json({ message: 'User login was successful', user: { id, email, following, profile }, token: jwt.token, expiresIn: jwt.expires });
     } catch (err) { 
       next(err) 
     }
@@ -191,10 +196,43 @@ const patchUserProfile = [
   }
 ];
 
+const getMyInfo = [
+  passport.authenticate('jwt', { session: false }),
+  async (req, res) => {
+    const { id } = req.user;
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(id, 10) },
+        include: {
+          profile: {
+            select: {
+              name: true,
+              displayColor: true,
+            },
+          },
+          following: {
+            select: { 
+              id: true, 
+            },
+          },
+        },
+      });
+
+      return res.status(200).json({ message: 'User fetch was successful', user });
+
+    } catch (err) {
+      console.error(`Failed to fetch me information from server`);
+      res.status(500).json({ message: `Failed to fetch /me from server` });
+    }
+  }
+];
+
 module.exports = {
   postRegisterUser,
   postLoginUser,
   getLogoutUser,
   getFollowingList,
   patchUserProfile,
+  getMyInfo,
 }
