@@ -154,6 +154,91 @@ const getFollowingList = [
   }
 ];
 
+const postFollowing = [
+  passport.authenticate('jwt', { session: false }),
+  param('id').isInt(),
+  async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(req.user.id) },
+        include: {
+          following: true,
+        },
+      });
+
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const check = user.following.some((f) => f.id == id);
+      if (check) {
+        return res.status(400).json({ message: `You already follow this user.` });
+      }
+
+      await prisma.user.update({
+        where: { id: parseInt(req.user.id, 10) },
+        data: {
+          following: {
+            connect: {
+              id: parseInt(id, 10),
+            },
+          },
+        },
+      });
+
+      return res.status(200).json({ message: `User with id: ${id} was successfully followed` });
+
+    } catch (err) {
+      console.error(`Failed to follow user`);
+      res.status(500).json({ message: `Failed to post user to following list` });
+    }
+  }
+];
+
+const deleteFollowing = [
+  passport.authenticate('jwt', { session: false }),
+  async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(req.user.id, 10) },
+        include: {
+          following: true,
+        },
+      });
+
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const check = user.following.some((f) => f.id == id);
+      if (!check) {
+        return res.status(400).json({ message: `You are not following this user.` });
+      }
+
+      await prisma.user.update({
+        where: { id: parseInt(req.user.id, 10) },
+        data: {
+          following: {
+            disconnect: {
+              id: parseInt(id, 10),
+            },
+          },
+        },
+      });
+
+      return res.status(200).json({ message: `User with id: ${id} was successfully unfollowed` });
+
+    } catch (err) {
+      console.error(`Failed to unfollow user`);
+      res.status(500).json({ message: `Failed to delete user from following list` });
+    }
+  }
+];
+
 const patchUserProfile = [
   passport.authenticate('jwt', { session: false }),
   param('id').isInt(),
@@ -199,12 +284,16 @@ const patchUserProfile = [
 const getMyInfo = [
   passport.authenticate('jwt', { session: false }),
   async (req, res) => {
-    const { id } = req.user;
+    const userId = req.user.id;
 
     try {
       const user = await prisma.user.findUnique({
-        where: { id: parseInt(id, 10) },
-        include: {
+        where: { 
+          id: parseInt(userId, 10)
+        },
+        select: {
+          id: true,
+          email: true,
           profile: {
             select: {
               name: true,
@@ -212,8 +301,8 @@ const getMyInfo = [
             },
           },
           following: {
-            select: { 
-              id: true, 
+            select: {
+              id: true,
             },
           },
         },
@@ -233,6 +322,8 @@ module.exports = {
   postLoginUser,
   getLogoutUser,
   getFollowingList,
+  postFollowing,
+  deleteFollowing,
   patchUserProfile,
   getMyInfo,
 }
