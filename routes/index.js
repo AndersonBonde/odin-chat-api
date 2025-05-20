@@ -20,5 +20,6 @@ router.get('/connect', (req, res) => {
 
 router.use('/users', require('./users'));
 router.use('/messages', require('./messages'));
+router.use('/chat-rooms', require('./chat-rooms'));
 
 module.exports = router;
