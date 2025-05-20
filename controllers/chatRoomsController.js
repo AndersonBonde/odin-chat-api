@@ -80,7 +80,99 @@ const postMessageOnGeneral = [
   }
 ];
 
+const createChatRoom = [
+  passport.authenticate('jwt', { session: false }),
+  body('memberIds')
+    .isArray({ min: 2 })
+    .withMessage('memberIds must be an array with at least 2 items.'),
+  body('memberIds.*')
+    .isInt()
+    .withMessage('Each memberId must be an integer'),
+  async (req, res) => {
+    const { memberIds } = req.body;
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const existingUsers = await prisma.user.findMany({
+        where: {
+          id: {
+            in: memberIds,
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const existingIds = existingUsers.map((user) => user.id);
+      const allExist = memberIds.every((id) => existingIds.includes(id));
+
+      if (!allExist) {
+        return res.status(400).json({ message: `Can't create chat room with users that don't exist` });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(req.user.id, 10) },
+        include: {
+          chatRooms: {
+            include: { 
+              members: true,
+            },
+          },
+        },
+      });
+
+      const isMember = memberIds.includes(user.id);
+
+      if (!isMember) {
+        return res.status(403).json({ message: `Failed to create chat-room` });
+      }
+
+      const chatRoomAlreadyExists = user.chatRooms.some((room) => {
+        const members = room.members.map((m) => m.id).sort();
+        const input = [...memberIds].sort();
+        return (
+          members.length == input.length &&
+          members.every((id, idx) => id == input[idx])
+        );
+      });
+
+      if (chatRoomAlreadyExists) {
+        return res.status(403).json({ message: `Chat room between memberIds already exists` });
+      }
+
+      // Map memberIds to the format prisma expects
+      const connectMembers = memberIds.map((id) => ({ id }));
+
+      const chatRoom = await prisma.chatRoom.create({
+        data: {
+          isPrivate: true,
+          members: {
+            connect: connectMembers,
+          },
+        },
+      });
+
+      return res.status(201).json({ message: `Chat room created successfully`, chatRoom });
+
+    } catch (err) {
+      console.error(`Failed to create chat room with prisma`);
+      return res.status(500).json({ message: `Server error creating chat room`, error: err.message });
+    }
+  }
+];
+
+const getChatRoomMessages = [
+  
+];
+
 module.exports = {
   getAllGeneralMessages,
   postMessageOnGeneral,
+  createChatRoom,
+  getChatRoomMessages,
 }
