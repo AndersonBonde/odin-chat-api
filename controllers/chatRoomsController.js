@@ -1,6 +1,6 @@
 const prisma = require('../prisma/index');
 const passport = require('passport');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 
 const getAllGeneralMessages = async (req, res) => {
   try {
@@ -167,7 +167,48 @@ const createChatRoom = [
 ];
 
 const getChatRoomMessages = [
-  
+  passport.authenticate('jwt', { session: false }),
+  param('id').isInt(),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(req.user.id, 10) },
+        include: { chatRooms: true },
+      });
+      
+      const isMember = user.chatRooms.some((room) => {
+        room.id == id;
+      });
+
+      if (!isMember) {
+        return res.status(403).json({ message: `Unauthorized to access this resource` });
+      }
+
+      const messages = await prisma.message.findMany({
+        where: { chatRoomId: parseInt(id, 10), },
+        include: { 
+          author: {
+            include: {
+              profile: {
+                select: {
+                  name: true,
+                  displayColor: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { id: 'asc' },
+      });
+    
+      return res.json({ message: 'List of all general messages fetched successfully', messages });
+    } catch (err) {
+      console.error('Failed to load chat messages with prisma');
+      return res.status(500).json({ message: 'Server error loading chat messages', error: err.message });
+    }
+  }
 ];
 
 module.exports = {
