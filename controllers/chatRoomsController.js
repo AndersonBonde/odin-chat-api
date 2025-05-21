@@ -211,9 +211,14 @@ const getChatRoomMessages = [
   }
 ];
 
+const postChatRoomMessage = [
+
+];
+
 module.exports = {
   getAllGeneralMessages,
   postMessageOnGeneral,
   createChatRoom,
   getChatRoomMessages,
+  postChatRoomMessage,
 }

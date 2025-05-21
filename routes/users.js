@@ -11,5 +11,6 @@ router.post('/following/:id', usersController.postFollowing);
 router.delete('/following/:id', usersController.deleteFollowing);
 router.patch('/profile/:id', usersController.patchUserProfile);
 router.get('/me', usersController.getMyInfo);
+router.get('/chat-rooms', usersController.getMyChatRooms);
 
 module.exports = router;

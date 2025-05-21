@@ -317,6 +317,10 @@ const getMyInfo = [
   }
 ];
 
+const getMyChatRooms = [
+  // TODO
+];
+
 module.exports = {
   postRegisterUser,
   postLoginUser,
@@ -326,4 +330,5 @@ module.exports = {
   deleteFollowing,
   patchUserProfile,
   getMyInfo,
+  getMyChatRooms,
 }
