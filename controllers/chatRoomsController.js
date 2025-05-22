@@ -179,7 +179,7 @@ const getChatRoomMessages = [
       });
       
       const isMember = user.chatRooms.some((room) => {
-        room.id == id;
+        return room.id == id;
       });
 
       if (!isMember) {
@@ -212,7 +212,10 @@ const getChatRoomMessages = [
 ];
 
 const postChatRoomMessage = [
-
+  passport.authenticate('jwt', { session: false }),
+  async (req, res) => {
+    
+  }
 ];
 
 module.exports = {

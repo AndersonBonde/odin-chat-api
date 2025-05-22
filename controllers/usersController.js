@@ -48,6 +48,11 @@ const postRegisterUser = [
               displayColor: '#000000',
             },
           },
+          chatRooms: {
+            connect: {
+              slug: 'general',
+            },
+          },
         },
       });
       
@@ -312,7 +317,7 @@ const getMyInfo = [
 
     } catch (err) {
       console.error(`Failed to fetch me information from server`);
-      res.status(500).json({ message: `Failed to fetch /me from server` });
+      res.status(500).json({ message: `Failed to fetch /me from server`, error: err.message });
     }
   }
 ];
@@ -323,12 +328,13 @@ const getMyChatRooms = [
     const userId = req.user.id;
 
     try {
-      const { chatRooms } = prisma.user.findUnique({
+      const { chatRooms } = await prisma.user.findUnique({
         where: { id: parseInt(userId, 10), },
         select: {
           chatRooms: {
             select: {
               id: true,
+              name: true,
               members: {
                 select: {
                   id: true,
@@ -346,8 +352,7 @@ const getMyChatRooms = [
 
     } catch (err) {
       console.error(`Failed to fetch chat rooms from user`);
-      res.status(500).json({ message: `Failed to fetch /chat-rooms from server` });
-
+      res.status(500).json({ message: `Failed to fetch /chat-rooms from server`, error: err.message });
     }
   }
 ];
