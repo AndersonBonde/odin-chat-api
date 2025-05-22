@@ -318,7 +318,38 @@ const getMyInfo = [
 ];
 
 const getMyChatRooms = [
-  // TODO
+  passport.authenticate('jwt', { session: false }),
+  async (req, res) => {
+    const userId = req.user.id;
+
+    try {
+      const { chatRooms } = prisma.user.findUnique({
+        where: { id: parseInt(userId, 10), },
+        select: {
+          chatRooms: {
+            select: {
+              id: true,
+              members: {
+                select: {
+                  id: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return res.status(200).json({ 
+        message: 'Chat rooms fetch was successful', chatRooms
+      });
+
+    } catch (err) {
+      console.error(`Failed to fetch chat rooms from user`);
+      res.status(500).json({ message: `Failed to fetch /chat-rooms from server` });
+
+    }
+  }
 ];
 
 module.exports = {
