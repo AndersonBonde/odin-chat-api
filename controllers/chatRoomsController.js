@@ -213,8 +213,55 @@ const getChatRoomMessages = [
 
 const postChatRoomMessage = [
   passport.authenticate('jwt', { session: false }),
+  body('text')
+    .trim()
+    .isLength({ min: 1, max: 1024 }).withMessage(`Message must be between 1 and 1024 characters`)
+    .escape(),
   async (req, res) => {
+    const { id: chatRoomId } = req.params;
+    const { id: userId, text } = req.body;
+    const errors = validationResult(req);
     
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: `Error creating a new message`, errors: errors.array() });
+    }
+
+    try {        
+      const chatRoom = await prisma.chatRoom.findUnique({
+        where: { id: parseInt(chatRoomId, 10) },
+      });
+      
+      if (!chatRoom) {
+        return res.status(404).json({ message: `Chat room not found` });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(req.user.id, 10) },
+        include: { chatRooms: true },
+      });
+      
+      const isMember = user.chatRooms.some((room) => {
+        return room.id == chatRoomId;
+      });
+
+      if (!isMember) {
+        return res.status(403).json({ message: `Unauthorized to access this resource` });
+      }
+      
+      const newMessage = await prisma.message.create({
+        data: {
+          text,
+          authorId: parseInt(user.id, 10),
+          chatRoomId,
+        }
+      });
+  
+      return res.status(201).json({ message: `New message for Chat with id: ${chatRoomId} created successfully`, newMessage });
+
+    } catch (err) {
+      console.error(`Failed to create message on chat room with id: ${chatRoomId} with prisma`);
+      return res.status(500).json({ message: `Server error creating message`, error: err.message });
+    }
   }
 ];
 
