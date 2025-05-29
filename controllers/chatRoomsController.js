@@ -218,8 +218,8 @@ const postChatRoomMessage = [
     .isLength({ min: 1, max: 1024 }).withMessage(`Message must be between 1 and 1024 characters`)
     .escape(),
   async (req, res) => {
-    const { id: chatRoomId } = req.params;
-    const { id: userId, text } = req.body;
+    const { id } = req.params;
+    const { text } = req.body;
     const errors = validationResult(req);
     
     if (!errors.isEmpty()) {
@@ -228,7 +228,7 @@ const postChatRoomMessage = [
 
     try {        
       const chatRoom = await prisma.chatRoom.findUnique({
-        where: { id: parseInt(chatRoomId, 10) },
+        where: { id: parseInt(id, 10) },
       });
       
       if (!chatRoom) {
@@ -241,7 +241,7 @@ const postChatRoomMessage = [
       });
       
       const isMember = user.chatRooms.some((room) => {
-        return room.id == chatRoomId;
+        return room.id == id;
       });
 
       if (!isMember) {
@@ -252,14 +252,14 @@ const postChatRoomMessage = [
         data: {
           text,
           authorId: parseInt(user.id, 10),
-          chatRoomId,
+          chatRoomId: parseInt(id, 10),
         }
       });
   
-      return res.status(201).json({ message: `New message for Chat with id: ${chatRoomId} created successfully`, newMessage });
+      return res.status(201).json({ message: `New message for Chat with id: ${id} created successfully`, newMessage });
 
     } catch (err) {
-      console.error(`Failed to create message on chat room with id: ${chatRoomId} with prisma`);
+      console.error(`Failed to create message on chat room with id: ${id} with prisma`);
       return res.status(500).json({ message: `Server error creating message`, error: err.message });
     }
   }
