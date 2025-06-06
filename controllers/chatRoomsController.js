@@ -67,9 +67,21 @@ const postMessageOnGeneral = [
             authorId: userId ? parseInt(userId, 10) : null,
             guestName: userId ? null : (guestName || null),
             chatRoomId: chatRoom.id,
-          }
+          },
+          include: {
+            author: {
+              include: {
+                profile: {
+                  select: {
+                    name: true,
+                    displayColor: true,
+                  },
+                },
+              },
+            },
+          },
         });
-  
+
         return res.status(201).json({ message: `New message for General Chat created successfully`, newMessage });
 
       } catch (err) {
@@ -253,7 +265,19 @@ const postChatRoomMessage = [
           text,
           authorId: parseInt(user.id, 10),
           chatRoomId: parseInt(id, 10),
-        }
+        },
+        include: {
+          author: {
+            include: {
+              profile: {
+                select: {
+                  name: true,
+                  displayColor: true,
+                },
+              },
+            },
+          },
+        },
       });
   
       return res.status(201).json({ message: `New message for Chat with id: ${id} created successfully`, newMessage });
